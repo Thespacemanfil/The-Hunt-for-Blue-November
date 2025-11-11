@@ -1,6 +1,0 @@
-numpy
-pygame
-pandas
-
-stakeholder luft feedback
-Needs map scale
