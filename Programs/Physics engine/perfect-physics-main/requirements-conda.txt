@@ -1,0 +1,16 @@
+sympy
+numpy
+gmpy2
+cloudpickle
+ipython
+notebook
+matplotlib
+ipykernel
+appdirs
+black
+flake8
+pytest
+isort
+pytest
+plotly
+ipywidgets

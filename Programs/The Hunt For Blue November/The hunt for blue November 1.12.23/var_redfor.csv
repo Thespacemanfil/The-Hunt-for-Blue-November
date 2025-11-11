@@ -1,0 +1,2 @@
+class,tgt_heading,tgt_speed,heading,x,y,z,speed,crew,hull_integrity,torpedo_type,torpedo_load,missile_type,missile_load
+Krankenhauser,20,50,359,200,0,4500,100,125,20,hyena,0,0,0

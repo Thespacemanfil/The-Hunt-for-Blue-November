@@ -1,0 +1,218 @@
+<html>
+
+<head>
+  <title>Perfect Physics: Live Demo</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <meta property="og:image" content="python newton.png" />
+
+  </style>
+
+</head>
+
+<body>
+  <div class="container">
+
+    <script>
+      function clearOutput(divId) {
+        const outputDiv = document.getElementById(divId);
+        outputDiv.innerHTML = '';
+      }
+    </script>
+    <py-script>
+      from sympy import latex, S
+      from perfect_physics import World, Circle, Wall, Timeline
+      from perfect_physics._timeline import Collision
+
+      def run_in_place(world, steps, target, fig_factor=1, clear=True):
+         if clear:
+           js.document.getElementById(target).innerHTML = ''
+         world.run_in_place(steps, show=True,
+         show_fun=lambda figure: display(figure, target=target, append=True),
+         figsize=(19.2 / 4, 10.8 / 4 * fig_factor)
+      )
+
+      def count_collisions(right_mass, target, show=False, font_scale=.5, clear=True):
+        if clear:
+            js.document.getElementById(target).innerHTML = ''
+        show_fun=lambda figure: display(figure, target=target, append=True)
+        world_width = 5
+        left = Circle(x=2, y=0, r=1, vx=0, vy=0, m=1)
+        right = Circle(x=6 if right_mass > 1 else 5, y=0, r=2 if right_mass > 1 else 1, vx=-1, vy=0, m=right_mass)
+        circle_list = [left, right]
+        wall_list = [ Wall(x0=0, y0=0, x1=0, y1=1)]
+        world = World(circle_list, wall_list, xlim=(-1, world_width + 1), ylim=(-1 - 1, 1 + 1))
+        count = 0
+        world.show(show=show, font_scale=font_scale)
+        hint_ssca_list = []
+        timeline = Timeline()
+        while True:
+            ss_calist, hint_ssca_list = world._tick(timeline, hint_ssca_list, default_tick=0)
+            world.show(
+                show=show and ss_calist[0] is not S.Zero,
+                font_scale=font_scale,
+                show_fun=show_fun,
+            )
+            world._tock(ss_calist, timeline)
+            world.show(show=show, font_scale=font_scale)
+            # print(f"x {timeline.events[-1]}")
+            if not isinstance(timeline.events[-1],Collision):
+                break
+            count += 1
+        return count
+
+    </py-script>
+
+    <py-config>
+      packages = ["matplotlib", "pandas", "seaborn", "cloudpickle",
+                  "perfect-physics==0.1.9"]
+    </py-config>
+
+    <div class="image-text-container">
+      <img src="CarlKadie.2011.500pxSquare.jpg" class="round-image" />
+      <div class="image-text">Carl M. Kadie</div>
+    </div>
+
+
+    <H1>Perfect Physics: Live Demo</H1>
+
+    <div class="responsive-image-container">
+      <img src="python newton.png" class="responsive-image" />
+    </div>
+
+
+    <p><a href="https://github.com/CarlKCarlK/perfect-physics">Perfect Physics</a>
+      is <b>a Python physics simulator that uses
+        computer algebra</b> (<a href="https://www.sympy.org/">SymPy</a>)
+      to do all calculations exactly. For details, read
+      "<a
+        href="https://towardsdatascience.com/perfect-infinite-precision-game-physics-in-python-part-1-698211c08d95">Perfect,
+        Infinite-Precision, Game Physics in Python"</a>
+      in <i>Towards Data Science</i> or watch the
+      <a href="https://www.youtube.com/watch?v=52n2qKgwW_Q&t=4s">PyData Conference Presentation</a> .
+    </p>
+
+    <p> This page lets you run your own simulations in the browser.
+      <b>Just press a green
+        arrow (and wait a while).</b> If you like, you can change the examples completely and run
+      arbitrary Python code.
+    </p>
+
+    <p>The <b>outputs shows snapshots</b> at the next collision(s) with a "Clock".
+      (Full animations are not yet available.)</p>
+
+    <p>The page uses <a href="https://pyscript.net/">PyScript</a>.
+      Its <a href="https://github.com/CarlKCarlK/perfect-physics/blob/main/pyscript/index.html">source code</a> is
+      simple.</p>
+
+    <hr>
+    </hr>
+
+    <h2 id="newtons-cradle">Newton's Cradle</h2>
+
+    <p>To run, click the triangle or press shift-enter. May take 10's of seconds to run.</p>
+    <p>Ideas: Change the number of balls or number of steps.</p>
+
+    <py-repl output="newtonOutput">
+      circle_list = [Circle(x=1, y=0, r=1, vx=1, vy=0, m=1)]
+      for i in range(1, 5):
+         circle_list.append(Circle(x=i * 2 + 4, y=0, r=1, vx=0, vy=0, m=1))
+      wall_list = [Wall(x0=0, y0=0, x1=0, y1=1), Wall(x0=20, y0=0, x1=20, y1=1)]
+      world = World(circle_list, wall_list, xlim=(-1, 21), ylim=(-2, 2))
+      run_in_place(world, steps=5, target="newtonOutput", fig_factor=0.5)
+    </py-repl>
+    <button id="clearButton" onclick="clearOutput('newtonOutput')">clear</button>
+
+    <div id="newtonOutput"></div>
+
+    <hr>
+    </hr>
+    <h2 id="tennis-ball">Tennis Ball and Basketball</h2>
+
+    <p>It prints the velocity of the tennis ball at the end.</p>
+    <p>Ideas: Change 'big_radius', the size of the basketball, or the number of steps.</p>
+
+    <py-repl output="tennisOutput">
+      big_radius = 10
+      world_width = 40
+      big = Circle(x=world_width // 2, y=0, r=big_radius, vx=1, vy=0, m=big_radius**3)
+      little = Circle(x=big.x - big_radius - 1, y=0, r=1, vx=1, vy=0, m=1)
+      circle_list = [big, little]
+      wall_list = [Wall(x0=0, y0=0, x1=0, y1=1), Wall(x0=world_width, y0=0, x1=world_width, y1=1)]
+      world = World(circle_list, wall_list, xlim=(-1, world_width + 1), ylim=(-big_radius - 1, big_radius + 1))
+      run_in_place(world, steps=2, target="tennisOutput")
+      display(f"little vx is {little.vx} (approx. {float(little.vx):.2f})", target="tennisOutput", append=True)
+    </py-repl>
+    <button id="clearButton" onclick="clearOutput('tennisOutput')">clear</button>
+
+    <div id="tennisOutput"></div>
+
+    <hr>
+    </hr>
+    <h2 id="three-circles">Three Circles on a Line</H2>
+
+    <p>It runs with two different seeds.
+      This is based on an example from Prof. Edward A. Lee's
+      <a href="https://dl.acm.org/doi/pdf/10.1145/2912149">Fundamental Limits of Cyber-Physical Systems Modeling</a>.
+    </p>
+    <p>Ideas: Change the mass of the right ball.</p>
+
+    <py-repl output="onLineOutput">
+      js.document.getElementById("onLineOutput").innerHTML = ''
+      for seed in [0,1]:
+        left = Circle(x=-3, y=0, r=1, vx=1, vy=0, m=1, id="left")
+        middle = Circle(x=0, y=0, r=1, vx=0, vy=0, m=1, id="middle")
+        right = Circle(x=4, y=0, r=2, vx=-1, vy=0, m=4, id="right")
+        world = World([left, middle, right], rng=seed, xlim=(-10, 10), ylim=(-3, 3))
+        display(f"seed {seed}", target="onLineOutput", append=True)
+        run_in_place(world, steps=3, target="onLineOutput", fig_factor=.66, clear=False)
+    </py-repl>
+    <button id="clearButton" onclick="clearOutput('onLineOutput')">clear</button>
+
+    <div id="onLineOutput"></div>
+
+    <hr>
+    </hr>
+    <H2>Billiards</H2>
+
+    <p>Ideas: Change the # of rows or number of steps.</p>
+
+    <py-repl output="billiardsOutput">
+      rows = -2 # positive for a 1st ball of triangle
+      seed = 0
+      world = World.billiards(rows=rows, rng=seed)
+      run_in_place(world, steps=5, target="billiardsOutput")
+    </py-repl>
+    <button id="clearButton" onclick="clearOutput('billiardsOutput')">clear</button>
+
+    <div id="billiardsOutput"></div>
+
+    <hr>
+  </hr>
+  <h2 id="pi-collisions">Computing &pi; with Collisions</h2>
+
+  <p>According to <a href="https://www.maths.tcd.ie/~lebed/Galperin.%20Playing%20pool%20with%20pi.pdf">a paper by G. Galperin</a>,
+    <a href="https://www.youtube.com/watch?v=HEfHFsfGXjs&t=1s">two</a>
+    <a href="https://www.youtube.com/watch?v=jsYwFizhncE&t=2s">videos</a> by 3Blue1Brown,
+    and <a href="https://archive.nytimes.com/wordplay.blogs.nytimes.com/2014/03/10/pi/">a New York Times item</a>,
+    you can compute &pi; by counting the number of collisions between two balls
+    of different mass and a wall.
+   </p>
+
+  <py-repl output="piOutput">
+    larger_mass = 1 # try 100 and 10_000
+    show = False
+    count_collisions(larger_mass, target="piOutput", show=show)
+  </py-repl>
+  <button id="clearButton" onclick="clearOutput('piOutput')">clear</button>
+
+  <div id="piOutput"></div>
+  <hr>
+</hr>
+<p> </p>
+  </div>
+</body>
+
+</html>
